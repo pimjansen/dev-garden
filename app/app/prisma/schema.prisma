@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model channel {
+  id         String   @id
+  name       String
+  created_at DateTime @default(now())
+}
+
+model message {
+  id         String   @id
+  channel_id String
+  content    String
+  user_id    String
+  user       user     @relation(fields: [user_id], references: [id])
+  created_at DateTime @default(now())
+
+  @@index([channel_id])
+  @@index([user_id])
+}
+
+model user {
+  id         String    @id
+  name       String
+  nickname   String    @unique
+  email      String    @unique
+  // registration_finished_at DateTime
+  created_at DateTime  @default(now())
+  last_login DateTime  @default(now())
+  messages   message[]
+}

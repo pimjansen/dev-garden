@@ -1,0 +1,17 @@
+name: chat-app
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL}
+    ports:
+      - "8000:3000"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

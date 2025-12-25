@@ -1,0 +1,11 @@
+.DS_Store
+.env.local
+node_modules/
+
+# React Router
+/app/.react-router/
+/app/build/
+
+/app/generated/prisma
+
+/app/generated/prisma

@@ -1,0 +1,25 @@
+name: dev-garden
+
+services:
+  db:
+    image: postgres:18
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: dev-garden
+      POSTGRES_DB: dev-garden
+    ports:
+      - 4000:5432
+    volumes:
+      - db_data:/var/lib/postgresql
+
+  db-admin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - 4001:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pimjansen@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+volumes:
+  db_data:
+    driver: local
