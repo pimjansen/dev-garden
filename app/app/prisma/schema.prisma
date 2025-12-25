@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model channel {
+  id         String   @id
+  name       String
+  created_at DateTime @default(now())
+}
