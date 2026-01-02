@@ -132,13 +132,14 @@ export default function Channel({ loaderData }: Route.ComponentProps) {
       message: string;
       timestamp: Date;
     }) => {
+      console.log(data);
       // Add new message to state
       const newMessage = {
         id: crypto.randomUUID(), // Temporary ID
         content: data.message,
         user: {
-          id: user.id,
-          name: user.name,
+          id: data.user.id,
+          name: data.user.name,
         },
         created_at: new Date(data.timestamp),
         channel_id: channelId,
