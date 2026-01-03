@@ -47,7 +47,7 @@ export default function Message({ mapToPrevious, by, date, message }: IProps) {
 
   if (mapToPrevious) {
     return (
-      <article className="flex gap-4 mb-4">
+      <article className="flex gap-4 mb-1 pl-14">
         <div>
           <p className="whitespace-pre-wrap">{parsedMessage}</p>
         </div>
@@ -56,7 +56,7 @@ export default function Message({ mapToPrevious, by, date, message }: IProps) {
   }
 
   return (
-    <article className="flex gap-4 mb-4">
+    <article className="flex gap-4 mt-4 mb-1">
       <img src="https://placehold.co/40x40" className="h-10 w-10 rounded-md" alt="User Avatar" />
       <div>
         <header>

@@ -16,6 +16,7 @@ type User = {
   id: string;
   name: string;
   connectedAt: Date;
+  connected: boolean;
 };
 
 type Channel = {
@@ -60,16 +61,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     if (!socket) return;
 
     // // Listen for new users connecting
-    // socket.on("user.connected", (data: { user: { id: string; name: string }; totalUsers: number; users: any[] }) => {
-    //   console.log("User connected:", data.user);
-    //   setConnectedUsers(data.users);
-    // });
+    socket.on("user.connected", (data: { id: string; name: string }) => {
+      setConnectedUsers((prev) => [
+        ...prev.filter((user) => user.id !== data.id),
+        {
+          ...data,
+          connectedAt: new Date(),
+          connected: true,
+        },
+      ]);
+    });
 
     // // Listen for users disconnecting
-    // socket.on("user.disconnected", (data: { user: { id: string; name: string }; totalUsers: number; users: any[] }) => {
-    //   console.log("User disconnected:", data.user);
-    //   setConnectedUsers(data.users);
-    // });
+    socket.on("user.disconnected", (data: { id: string }) => {
+      setConnectedUsers((prev) => prev.map((user) => (user.id === data.id ? { ...user, connected: false } : user)));
+    });
 
     // // Listen for channels list
     // socket.on("channels.list", (data: { channels: Channel[] }) => {
@@ -86,10 +92,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     return () => {
       socket.off("user.connected");
       socket.off("user.disconnected");
-      socket.off("channels.list");
       socket.off("channel.created");
     };
   }, [socket]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setConnectedUsers((prev) => prev.filter((user) => user.connected !== false));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex h-screen">
@@ -149,7 +162,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 >
                   <div className="flex items-center">
                     <img src="https://placehold.co/24x24" alt={user.name} className="w-6 h-6 rounded-md mr-2" />
-                    <div>{user.name}</div>
+                    <div className="flex items-center">
+                      {user.name}
+                      <div className={`ml-2 w-2 h-2 rounded-full ${user.connected ? "bg-green-500" : "bg-red-500"}`} />
+                    </div>
                   </div>
                 </li>
               ))}

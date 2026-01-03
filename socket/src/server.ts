@@ -59,9 +59,7 @@ const getUniqueUsers = () => {
 
 // Connection
 io.on("connection", (socket) => {
-  logger.log(
-    `Socket '${socket.id}' connected on namespace '${socket.nsp.name}'`
-  );
+  logger.log(`Socket '${socket.id}' connected on namespace '${socket.nsp.name}'`);
 
   channelListener(socket, io, connectedUsers, socketToUser);
 
@@ -73,16 +71,14 @@ io.on("connection", (socket) => {
       // User already connected from another tab
       existingUser.sockets.add(socket.id);
       socketToUser.set(socket.id, data.id);
-      logger.log(`User '${existingUser.name}' (${existingUser.id}) connected from additional tab. Total tabs: ${existingUser.sockets.size}`);
+      logger.log(
+        `User '${existingUser.name}' (${existingUser.id}) connected from additional tab. Total tabs: ${existingUser.sockets.size}`
+      );
 
       // Send current users list to the newly connected socket
       socket.emit("user.connected", {
-        user: {
-          id: existingUser.id,
-          name: existingUser.name,
-        },
-        totalUsers: connectedUsers.size,
-        users: getUniqueUsers(),
+        id: existingUser.id,
+        name: existingUser.name,
       });
     } else {
       // New user connection
@@ -98,12 +94,8 @@ io.on("connection", (socket) => {
 
       // Notify all clients about the new user
       io.emit("user.connected", {
-        user: {
-          id: user.id,
-          name: user.name,
-        },
-        totalUsers: connectedUsers.size,
-        users: getUniqueUsers(),
+        id: user.id,
+        name: user.name,
       });
 
       logger.log(`User '${user.name}' (${user.id}) identified. Total connected users: ${connectedUsers.size}`);
@@ -141,17 +133,10 @@ io.on("connection", (socket) => {
 
           // Notify all remaining clients about the disconnection
           io.emit("user.disconnected", {
-            user: {
-              id: user.id,
-              name: user.name,
-            },
-            totalUsers: connectedUsers.size,
-            users: getUniqueUsers(),
+            id: user.id,
           });
 
-          logger.log(
-            `User '${user.name}' (${user.id}) fully disconnected from namespace '${socket.nsp.name}'`
-          );
+          logger.log(`User '${user.name}' (${user.id}) fully disconnected from namespace '${socket.nsp.name}'`);
           logger.log(`Total connected users: ${connectedUsers.size}`);
         } else {
           logger.log(
@@ -160,9 +145,7 @@ io.on("connection", (socket) => {
         }
       }
     } else {
-      logger.log(
-        `Socket '${socket.id}' disconnected from namespace '${socket.nsp.name}' (user was not identified)`
-      );
+      logger.log(`Socket '${socket.id}' disconnected from namespace '${socket.nsp.name}' (user was not identified)`);
     }
   });
 });

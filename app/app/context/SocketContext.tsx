@@ -54,25 +54,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
           email: user.email,
           nickname: user.nickname,
         });
-      } else {
-        // Fallback for unauthenticated users (guest mode)
-        let userId = localStorage.getItem("userId");
-        let userName = localStorage.getItem("userName");
-
-        if (!userId) {
-          userId = crypto.randomUUID();
-          localStorage.setItem("userId", userId);
-        }
-
-        if (!userName) {
-          userName = `Guest-${userId.slice(0, 8)}`;
-          localStorage.setItem("userName", userName);
-        }
-
-        socketInstance.emit("user.identify", {
-          id: userId,
-          name: userName,
-        });
       }
     });
 
@@ -100,25 +81,6 @@ export function SocketProvider({ children }: SocketProviderProps) {
         name: user.name,
         email: user.email,
         nickname: user.nickname,
-      });
-    } else {
-      // Fallback for unauthenticated users (guest mode)
-      let userId = localStorage.getItem("userId");
-      let userName = localStorage.getItem("userName");
-
-      if (!userId) {
-        userId = crypto.randomUUID();
-        localStorage.setItem("userId", userId);
-      }
-
-      if (!userName) {
-        userName = `Guest-${userId.slice(0, 8)}`;
-        localStorage.setItem("userName", userName);
-      }
-
-      socket.emit("user.identify", {
-        id: userId,
-        name: userName,
       });
     }
   }, [socket, isConnected, user?.id]); // Only re-identify when user ID actually changes

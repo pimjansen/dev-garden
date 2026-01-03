@@ -189,6 +189,16 @@ export default function Channel({ loaderData }: Route.ComponentProps) {
     e.currentTarget.reset();
   };
 
+  const shouldBeMappedToPrevious = (current: IMessage, previous: IMessage | undefined) => {
+    if (!previous) {
+      return false;
+    }
+    if (current.user.id === previous.user.id) {
+      return true;
+    }
+    return false;
+  };
+
   return (
     <div className="relative flex flex-col h-full gap-8">
       <h1 className="font-bold text-2xl"># {channel.name}</h1>
@@ -203,15 +213,22 @@ export default function Channel({ loaderData }: Route.ComponentProps) {
                   </div>
                 );
               }
-              return messages.map((msg) => (
-                <Message
-                  mapToPrevious={false}
-                  key={msg.id}
-                  date={msg.created_at}
-                  by={msg.user.name}
-                  message={msg.content}
-                />
-              ));
+              let prevMessage: undefined | IMessage = undefined;
+              return messages.map((msg) => {
+                return messages.map((msg) => {
+                  const element = (
+                    <Message
+                      mapToPrevious={shouldBeMappedToPrevious(msg, prevMessage)}
+                      key={msg.id}
+                      date={msg.created_at}
+                      by={msg.user.name}
+                      message={msg.content}
+                    />
+                  );
+                  prevMessage = msg;
+                  return element;
+                });
+              });
             }}
           </Await>
         </React.Suspense>
