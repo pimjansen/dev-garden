@@ -3,6 +3,5 @@ import type { Route } from "./+types/view";
 import Board from "~/components/Board/Board";
 
 export default function Home() {
-  return <Board />;
-  // return <KanbanBoard />;
+  return <Board boardId="main-board" />;
 }

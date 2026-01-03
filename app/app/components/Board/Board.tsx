@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Column from "./Column";
 import type { ITask } from "./Card";
+import { useSocket } from "~/context/SocketContext";
 
 interface Column {
   id: string;
@@ -90,11 +91,92 @@ const mockData: Column[] = [
   },
 ];
 
-export default function Board() {
+type Cursor = {
+  userId: string;
+  userName: string;
+  x: number;
+  y: number;
+};
+
+interface BoardProps {
+  boardId?: string;
+}
+
+export default function Board({ boardId = "default" }: BoardProps) {
   const [columns, setColumns] = useState<Column[]>(mockData);
+  const [cursors, setCursors] = useState<Record<string, Cursor>>({});
+  const [userIdentified, setUserIdentified] = useState(false);
+  const { socket } = useSocket();
+
+  // Wait for user identification
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("user.connected", () => {
+      console.log("User identified on socket");
+      setUserIdentified(true);
+    });
+
+    return () => {
+      socket.off("user.connected");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket || !userIdentified) {
+      console.log("Waiting for socket and user identification", { socket: !!socket, userIdentified });
+      return;
+    }
+
+    // Join the board-specific room
+    socket.emit("board.join", { boardId });
+    console.log("Joined board:", boardId);
+
+    // Listen for cursor updates from other users
+    socket.on("board.cursor.update", (data: Cursor) => {
+      setCursors((prev) => ({
+        ...prev,
+        [data.userId]: data,
+      }));
+    });
+
+    // Listen for users leaving
+    socket.on("board.user.left", (data: { userId: string }) => {
+      console.log("User left board:", data.userId);
+      setCursors((prev) => {
+        const newCursors = { ...prev };
+        delete newCursors[data.userId];
+        return newCursors;
+      });
+    });
+
+    return () => {
+      socket.emit("board.leave", { boardId });
+      socket.off("board.cursor.update");
+      socket.off("board.user.left");
+    };
+  }, [socket, boardId, userIdentified]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!socket) return;
+
+    // Get the board container's position
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    // Calculate position relative to the board container, accounting for scroll
+    const x = e.clientX - rect.left + e.currentTarget.scrollLeft;
+    const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+
+    // Emit cursor position to other users in the board room
+    socket.emit("board.cursor.move", {
+      boardId,
+      x,
+      y,
+    });
+  };
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 h-full">
+    <div className="bg-gray-100 dark:bg-gray-900 h-full relative" onMouseMove={handleMouseMove}>
       <div className="p-6 overflow-x-auto">
         <div className="flex gap-6 min-w-max">
           {columns.map((column) => (
@@ -102,6 +184,28 @@ export default function Board() {
           ))}
         </div>
       </div>
+      {/* Render other users' cursors */}
+      {Object.values(cursors).map((cursor) => (
+        <div
+          key={cursor.userId}
+          className="absolute pointer-events-none z-50"
+          style={{
+            left: `${cursor.x}px`,
+            top: `${cursor.y}px`,
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M5.65376 12.3673L8.82672 15.5403L12.9342 7.92726L5.65376 12.3673Z"
+              fill="currentColor"
+              className="text-blue-500"
+            />
+          </svg>
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded ml-2 mt-1 whitespace-nowrap">
+            {cursor.userName}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

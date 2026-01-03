@@ -1,17 +1,10 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
-// import createAdapter from "./services/redis.js";
 import invariant from "tiny-invariant";
 import dotenv from "dotenv";
-// import registerSocketUi from "./services/socket_ui.js";
 import logger from "./logger";
 import channelListener from "./listeners/channel";
-// import debugListener from "./listeners/debugListener.js";
-// import notificationListener from "./listeners/notificationListener.js";
-// import middleware from "./middleware/index.js";
-// import chatListener from "./listeners/chatListener.js";
-// import taakListener from "./listeners/taakListener.js";
-// import gebruikerListener from "./listeners/gebruikerListener.js";
+import boardListener from "./listeners/board";
 
 dotenv.config();
 
@@ -48,20 +41,12 @@ export interface User {
 const connectedUsers = new Map<string, User>(); // Map by user ID (global)
 const socketToUser = new Map<string, string>(); // Map socket ID to user ID
 
-// Helper function to get unique users list
-const getUniqueUsers = () => {
-  return Array.from(connectedUsers.values()).map((u) => ({
-    id: u.id,
-    name: u.name,
-    socketCount: u.sockets.size,
-  }));
-};
-
 // Connection
 io.on("connection", (socket) => {
   logger.log(`Socket '${socket.id}' connected on namespace '${socket.nsp.name}'`);
 
   channelListener(socket, io, connectedUsers, socketToUser);
+  boardListener(socket, io, connectedUsers, socketToUser);
 
   // Wait for user to identify themselves
   socket.on("user.identify", (data: { id: string; name: string }) => {
