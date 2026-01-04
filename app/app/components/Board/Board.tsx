@@ -99,11 +99,13 @@ type Cursor = {
 };
 
 interface BoardProps {
-  boardId?: string;
+  boardId: string;
+  statuses: Array<any>;
+  tasks: Array<any>;
 }
 
-export default function Board({ boardId = "default" }: BoardProps) {
-  const [columns, setColumns] = useState<Column[]>(mockData);
+export default function Board({ boardId, statuses, tasks }: BoardProps) {
+  // const [columns, setColumns] = useState<Column[]>(mockData);
   const [cursors, setCursors] = useState<Record<string, Cursor>>({});
   const [userIdentified, setUserIdentified] = useState(false);
   const { socket } = useSocket();
@@ -164,8 +166,13 @@ export default function Board({ boardId = "default" }: BoardProps) {
     const rect = e.currentTarget.getBoundingClientRect();
 
     // Calculate position relative to the board container, accounting for scroll
-    const x = e.clientX - rect.left + e.currentTarget.scrollLeft;
-    const y = e.clientY - rect.top + e.currentTarget.scrollTop;
+    let x = e.clientX - rect.left + e.currentTarget.scrollLeft;
+    let y = e.clientY - rect.top + e.currentTarget.scrollTop;
+
+    // Clamp cursor position to stay within the visible viewport
+    // This prevents scrolling when cursor moves outside the window
+    x = Math.max(0, Math.min(x, rect.width + e.currentTarget.scrollLeft));
+    y = Math.max(0, Math.min(y, rect.height + e.currentTarget.scrollTop));
 
     // Emit cursor position to other users in the board room
     socket.emit("board.cursor.move", {
@@ -179,8 +186,8 @@ export default function Board({ boardId = "default" }: BoardProps) {
     <div className="bg-gray-100 dark:bg-gray-900 h-full relative" onMouseMove={handleMouseMove}>
       <div className="p-6 overflow-x-auto">
         <div className="flex gap-6 min-w-max">
-          {columns.map((column) => (
-            <Column key={column.id} tasks={column.tasks} title={column.title} />
+          {statuses.map((status) => (
+            <Column key={status.id} tasks={[]} title={status.status} />
           ))}
         </div>
       </div>
